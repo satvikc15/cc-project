@@ -1,40 +1,42 @@
 import streamlit as st
 import numpy as np
-import tensorflow as tf
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import img_to_array, load_img
+from skimage.color import rgb2lab, lab2rgb
 from PIL import Image
-import cv2
-
-# Load model
-@st.cache_resource
-def load_colorization_model():
-    return tf.keras.models.load_model("draft2(1800).h5")
-
-model = load_colorization_model()
+import io
 
 # Title
-st.title("Black & White to Color Image Converter")
-st.write("Upload a black and white image and see the colorized output using a deep learning model.")
+st.title("Black & White Image Colorizer")
+st.write("Upload a black-and-white photo to colorize it using a deep learning model.")
 
 # Upload image
-uploaded_file = st.file_uploader("Upload a grayscale image (JPG/PNG)", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # Load and preprocess image
-    image = Image.open(uploaded_file).convert("L")
-    st.subheader("Grayscale Image")
-    st.image(image, use_column_width=True)
+    # Display original image
+    image = Image.open(uploaded_file).convert('RGB')
+    st.image(image, caption="Uploaded Image", use_column_width=True)
 
-    # Resize and normalize
-    img_resized = image.resize((256, 256))
-    img_array = np.array(img_resized) / 255.0
-    img_input = np.expand_dims(img_array, axis=(0, -1))  # Shape: (1, 256, 256, 1)
+    # Preprocess image
+    image = image.resize((256, 256))
+    img_array = img_to_array(image) / 255.0
+    img_lab = rgb2lab(img_array)
+    img_l = img_lab[:, :, 0]
+    img_l = img_l.reshape(1, 256, 256, 1)
 
-    # Predict color image
-    color_output = model.predict(img_input)[0]  # Shape: (256, 256, 3)
-    color_output = np.clip(color_output, 0, 1)
+    # Load model
+    model = load_model("draft2(1800).h5", compile=False)
 
-    # Convert to displayable image
-    color_image = Image.fromarray((color_output * 255).astype('uint8'))
+    # Predict ab channels
+    output = model.predict(img_l)
+    output *= 128
 
-    st.subheader("Colorized Output")
-    st.image(color_image, use_column_width=True)
+    # Combine L with ab
+    result = np.zeros((256, 256, 3))
+    result[:, :, 0] = img_lab[:, :, 0]
+    result[:, :, 1:] = output[0]
+    colorized_img = lab2rgb(result)
+
+    # Show result
+    st.image(colorized_img, caption="Colorized Image", use_column_width=True)
