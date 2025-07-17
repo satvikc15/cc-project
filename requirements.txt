@@ -5,3 +5,4 @@ tensorflow-cpu==2.15.0 # Try this version for Python 3.13, or check TensorFlow d
 Pillow
 opencv-python-headless
 gdown
+Python 3.10
