@@ -1,5 +1,7 @@
-streamlit
-tensorflow==2.13.0
-opencv-python
-Pillow
+Flask
+Flask-Cors
 numpy
+tensorflow
+Pillow
+opencv-python-headless # Use headless for server environments
+gdown
