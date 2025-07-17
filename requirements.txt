@@ -1,7 +1,7 @@
 Flask
 Flask-Cors
 numpy
-tensorflow-cpu==2.10.0 # Or another version compatible with your Python environment
+tensorflow-cpu==2.15.0 # Try this version for Python 3.13, or check TensorFlow docs for latest
 Pillow
 opencv-python-headless
 gdown
